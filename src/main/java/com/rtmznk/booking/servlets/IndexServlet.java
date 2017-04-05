@@ -1,5 +1,6 @@
 package com.rtmznk.booking.servlets;
 
+
 import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
@@ -17,10 +18,11 @@ public class IndexServlet extends HttpServlet {
             throws ServletException, IOException {
 
         response.setContentType("text/html");
-        if(request.getRequestURI().length()<1){
-        RequestDispatcher dispatcher = request.getRequestDispatcher("/index.jsp");
-        dispatcher.forward(request, response);}
-        else {
+
+        if (request.getRequestURI().length() < 1) {
+            RequestDispatcher dispatcher = request.getRequestDispatcher("/index.jsp");
+            dispatcher.forward(request, response);
+        } else {
             response.sendError(HttpServletResponse.SC_NOT_FOUND);
         }
     }

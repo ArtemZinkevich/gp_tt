@@ -2,6 +2,7 @@ package com.rtmznk.booking.dao;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.rtmznk.booking.entity.Booking;
+import com.sun.org.apache.xpath.internal.SourceTree;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -11,7 +12,6 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -23,6 +23,7 @@ public class BookingsDAO {
     private static List<Booking> bookingsCache = new BookingsDAO().recieveBookings();
     private Lock fileLock = new ReentrantLock();
     private Lock cacheLock = new ReentrantLock();
+
 
     private List<Booking> recieveBookings() {
         List<Booking> result;
@@ -58,23 +59,25 @@ public class BookingsDAO {
 
     public Booking reciveBooking(long id) {
         cacheLock.lock();
-        Booking result=null;
-        Optional<Booking>bookOpt = bookingsCache.stream().filter((b) -> {
-            return b.getId() == id;
-        }).findFirst();
-        cacheLock.unlock();
-        if(bookOpt.isPresent()){
-            result=bookOpt.get();
+        Booking result = null;
+        for (Booking b : bookingsCache) {
+            if (b.getId() == id) {
+                result = b;
+            }
         }
+        cacheLock.unlock();
         return result;
     }
 
     public void deleteBooking(long id) {
         Booking removed = reciveBooking(id);
+        System.out.println("REmove booking with id" + id + ":" + removed);
+        System.out.println(bookingsCache.contains(removed));
         List<Integer> booked = removed.getSeats();
         cacheLock.lock();
         bookingsCache.remove(removed);
         cacheLock.unlock();
+        System.out.println(bookingsCache.contains(removed));
         new SeancesDAO().unbookSeansePlaces(removed.getSeanseId(), booked);
         updateBookingFile();
     }
@@ -100,6 +103,10 @@ public class BookingsDAO {
             fileLock.lock();
             FileWriter fileWriter = new FileWriter(BOOKINGS_FILE, true);
             mapper.writeValue(fileWriter, booking);
+            FileWriter linefeedWriter = new FileWriter(BOOKINGS_FILE, true);
+            linefeedWriter.write("\n");
+            linefeedWriter.flush();
+            linefeedWriter.close();
         } catch (IOException e) {
             e.printStackTrace();
         } finally {
@@ -109,11 +116,24 @@ public class BookingsDAO {
 
     private void updateBookingFile() {
         ObjectMapper mapper = new ObjectMapper();
+        try (FileWriter cleaner = new FileWriter(BOOKINGS_FILE)) {
+            fileLock.lock();
+            cleaner.write("");
+            cleaner.flush();
+            cleaner.close();
+        } catch (IOException e) {
+        } finally {
+            fileLock.unlock();
+        }
         cacheLock.lock();
         bookingsCache.forEach((booking -> {
-            try {
+            try (FileWriter fileWriter = new FileWriter(BOOKINGS_FILE, true);
+                 FileWriter fw = new FileWriter(BOOKINGS_FILE, true);
+            ) {
                 fileLock.lock();
-                mapper.writeValue(recieveBookingFile(), booking);
+
+                mapper.writeValue(fileWriter, booking);
+                fw.write("\n");
             } catch (IOException e) {
                 e.printStackTrace();
             } finally {

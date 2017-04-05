@@ -1,5 +1,6 @@
 package com.rtmznk.booking.servlets;
 
+import com.rtmznk.booking.dao.BookingsDAO;
 import com.rtmznk.booking.dao.SeancesDAO;
 import com.rtmznk.booking.htmlmaker.HtmlPageMaker;
 

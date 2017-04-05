@@ -2,10 +2,10 @@ package com.rtmznk.booking.dao;
 
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.rtmznk.booking.entity.Booking;
 import com.rtmznk.booking.entity.CinemaSeance;
 
 import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
@@ -61,7 +61,7 @@ public class SeancesDAO {
     public void bookSeancePlaces(long id, List<Integer> seats) {
         editingSeancePlacesLock.lock();
         try {
-            CinemaSeance searchedSeance = seansesCache.stream().filter(seance -> {
+            CinemaSeance searchedSeance = recieveSeances().stream().filter(seance -> {
                 return seance.getId() == id;
             }).findFirst().get();
             for (int i : seats) {
@@ -82,10 +82,24 @@ public class SeancesDAO {
 
     private void updateSeanceFile() {
         ObjectMapper mapper = new ObjectMapper();
+
+        try (FileWriter cleaner = new FileWriter(getFileName())) {
+            fileLock.lock();
+            cleaner.write("");
+            cleaner.flush();
+            cleaner.close();
+        } catch (IOException e) {
+        } finally {
+            fileLock.unlock();
+        }
         recieveSeances().forEach((seance -> {
-            try {
+            try (FileWriter fileWriter = new FileWriter(new File(getFileName()), true);
+                 FileWriter fw = new FileWriter(new File(getFileName()), true);
+            ) {
                 fileLock.lock();
-                mapper.writeValue(new File(getFileName()), seance);
+
+                mapper.writeValue(fileWriter, seance);
+                fw.write("\n");
             } catch (IOException e) {
                 e.printStackTrace();
             } finally {

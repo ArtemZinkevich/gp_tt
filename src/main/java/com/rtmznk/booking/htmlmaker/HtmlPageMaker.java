@@ -46,7 +46,7 @@ public class HtmlPageMaker {
     public static String getSeancePage(CinemaSeance seans) {
         StringBuilder sb = new StringBuilder();
         sb.append(PAGE_START);
-        sb.append("<h1>Seance :" + seans.getFullName() + "</h1>\n<br><br>");
+        sb.append("<h1>Seance :#" + seans.getId() + " | " + seans.getMovieName() + " | " + seans.getDate() + "</h1>\n<br><br>");
         sb.append("<p>Seats : </p>");
         sb.append("<form action=\"\\bookings\" method=\"post\">");
         List<Integer> seats = seans.getSeats();
@@ -56,7 +56,7 @@ public class HtmlPageMaker {
                 if (seats.get(i * 10 + j) == 0) {
                     sb.append("<input type=\"checkbox\" name =\"" + (i * 10 + j) + "\" >\n");
                 } else {
-                    sb.append("X");
+                    sb.append("&ensp;X&ensp;");
                 }
             }
             sb.append("<br><br>");

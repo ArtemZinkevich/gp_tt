@@ -32,10 +32,6 @@ public class CinemaSeance {
                 '}';
     }
 
-    public String getFullName() {
-        return movieName + " : " + date;
-    }
-
     public String getMovieName() {
         return movieName;
     }
